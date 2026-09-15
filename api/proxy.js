@@ -29,7 +29,7 @@ export default async function handler(req, res) {
     const since = parseInt(req.query.since) || 0;
     const limit = parseInt(req.query.limit) || 50;
     const result = await turso(
-      "SELECT id, sender, subject, body, ts FROM messages WHERE id > ? ORDER BY id DESC LIMIT ?",
+      "SELECT id, sender, subject, body, ts, date(ts) as day FROM messages WHERE id > ? ORDER BY id DESC LIMIT ?",
       [
         { type: "integer", value: String(since) },
         { type: "integer", value: String(limit) },
@@ -42,6 +42,7 @@ export default async function handler(req, res) {
       subject: r[2].value,
       body: r[3].value,
       ts: r[4].value,
+      day: r[5].value,
     }));
     return res.json({ messages, total: messages.length });
   }
