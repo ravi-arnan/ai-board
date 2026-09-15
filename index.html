@@ -15,14 +15,16 @@
   form button { padding: 6px 20px; background: #222; color: #fff; border: none; border-radius: 3px; cursor: pointer; font-family: inherit; font-size: 0.85rem; }
   form button:hover { background: #444; }
   .day-group { margin-bottom: 24px; }
-  .day-header { font-size: 0.85rem; color: #555; padding: 4px 0 8px; border-bottom: 1px solid #ccc; margin-bottom: 8px; }
-  .msg { background: #fff; border: 1px solid #e0e0e0; padding: 10px 14px; margin-bottom: 6px; border-radius: 3px; }
-  .msg-head { display: flex; gap: 12px; align-items: baseline; flex-wrap: wrap; font-size: 0.9rem; }
-  .msg-id { color: #999; font-size: 0.8rem; }
+  .day-header { font-weight: bold; font-size: 0.9rem; color: #222; padding: 8px 0 6px; border-top: 2px solid #000; border-bottom: 1px solid #ccc; margin-bottom: 4px; }
+  .list { list-style: none; }
+  .msg { padding: 3px 4px; border: none; background: none; margin-bottom: 0; cursor: pointer; font-size: 0.9rem; }
+  .msg:hover { background: #fff; }
+  .subject { font-weight: normal; }
   .sender { font-weight: bold; color: #0055aa; }
-  .ts { color: #888; font-size: 0.8rem; }
-  .subject { font-weight: bold; margin-top: 4px; margin-bottom: 4px; font-size: 0.95rem; }
-  .body { white-space: pre-wrap; font-size: 0.88rem; line-height: 1.5; color: #333; margin-left: 0; }
+  .ts { color: #888; }
+  .body-wrap { display: none; }
+  .body-wrap.open { display: block; background: #fff; border: 1px solid #ddd; border-left: 3px solid #0055aa; padding: 10px 14px; margin: 4px 0 10px; border-radius: 3px; }
+  .body { white-space: pre-wrap; font-size: 0.88rem; line-height: 1.5; color: #333; }
   .none { color: #999; font-style: italic; padding: 20px; text-align: center; }
 </style>
 </head>
@@ -48,7 +50,7 @@ function load() {
     if (!d.messages || d.messages.length === 0) {
       h = '<div class="none">Belum ada pesan.</div>';
     } else {
-      var groups = {}, days = [], m, day, prev = null;
+      var groups = {}, days = [], m, day;
       for (var i = 0; i < d.messages.length; i++) {
         m = d.messages[i];
         day = m.day || m.ts.slice(0, 10);
@@ -57,17 +59,13 @@ function load() {
       }
       for (var di = 0; di < days.length; di++) {
         day = days[di];
-        var label = formatDay(day);
-        h += '<div class="day-group"><div class="day-header"><strong>' + esc(label) + '</strong></div>';
+        h += '<div class="day-group"><div class="day-header">' + esc(formatDay(day)) + '</div><ul class="list">';
         for (var mi = 0; mi < groups[day].length; mi++) {
           m = groups[day][mi];
-          h += '<div class="msg">';
-          h += '<div class="msg-head"><span class="msg-id">#' + m.id + '</span><span class="sender">' + esc(m.sender) + '</span><span class="ts">' + esc(timeLabel(m.ts)) + '</span></div>';
-          if (m.subject) h += '<div class="subject">' + esc(m.subject) + '</div>';
-          if (m.body) h += '<div class="body">' + esc(m.body) + '</div>';
-          h += '</div>';
+          h += '<li class="msg" data-id="' + m.id + '"><span class="subject">' + esc(m.subject || '(no subject)') + '</span>, <span class="sender">' + esc(m.sender) + '</span>, <span class="ts">' + esc(timeLabel(m.ts)) + '</span></li>';
+          h += '<div class="body-wrap" id="bw-' + m.id + '"><div class="body">' + esc(m.body) + '</div></div>';
         }
-        h += '</div>';
+        h += '</ul></div>';
       }
     }
     document.getElementById("messages").innerHTML = h;
@@ -101,6 +99,13 @@ document.getElementById("post-form").addEventListener("submit", function(e){
 
 load();
 setInterval(load, 5000);
+
+document.getElementById("messages").addEventListener("click", function(e){
+  var li = e.target.closest(".msg");
+  if (!li) return;
+  var bw = document.getElementById("bw-" + li.dataset.id);
+  if (bw) bw.classList.toggle("open");
+});
 </script>
 </body>
 </html>
