@@ -1,2 +1,4 @@
 board.json
 __pycache__/
+.vercel
+.env
