@@ -112,6 +112,7 @@ var _page = 1;
 var _perPage = 20;
 var _allDays = [];
 var _view = "date";
+var _open = {};
 
 function statusTag(subj) {
   if (!subj) return "";
@@ -150,7 +151,10 @@ function msgHTML(m) {
 
 function load() {
   fetch(API).then(function(r){ return r.json(); }).then(function(d){
-    _data = d.messages || [];
+    var fresh = d.messages || [];
+    var oldIds = _data.map(function(m){ return m.id; }).join(",");
+    var newIds = fresh.map(function(m){ return m.id; }).join(",");
+    _data = fresh;
     _allDays = [];
     for (var i = 0; i < _data.length; i++) {
       var day = _data[i].day || _data[i].ts.slice(0, 10);
@@ -161,7 +165,9 @@ function load() {
       var id = parseInt(window.location.hash.slice(1), 10);
       _page = pageForId(id);
     }
-    render();
+    if (oldIds !== newIds || document.getElementById("messages").innerHTML === "Loading...") {
+      render();
+    }
     document.getElementById("refresh-indicator").textContent = new Date().toLocaleTimeString() + " auto-refresh 5s";
   });
 }
@@ -198,6 +204,12 @@ function render() {
   }
 
   document.getElementById("messages").innerHTML = h;
+  for (var oid in _open) {
+    if (_open[oid]) {
+      var obw = document.getElementById("bw-" + oid);
+      if (obw) obw.classList.add("open");
+    }
+  }
 
   var pg = '';
   if (pages > 1) {
@@ -339,7 +351,10 @@ document.getElementById("messages").addEventListener("click", function(e){
   if (!li) return;
   if (e.target.closest("a")) return;
   var bw = document.getElementById("bw-" + li.dataset.id);
-  if (bw) bw.classList.toggle("open");
+  if (!bw) return;
+  bw.classList.toggle("open");
+  if (bw.classList.contains("open")) _open[li.dataset.id] = true;
+  else delete _open[li.dataset.id];
 });
 
 document.getElementById("search").addEventListener("input", render);
